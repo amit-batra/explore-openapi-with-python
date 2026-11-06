@@ -1,16 +1,32 @@
 [project]
-name = "explore-graphql-with-python"
+name = "explore-openapi-with-python"
 version = "0.1.0"
-description = "Add your description here"
+description = "Explore the OpenAPI standard with Python: a typed client and a FastAPI server generated from one OpenAPI 3.1 document."
 readme = "README.md"
 authors = [
     { name = "Amit Batra", email = "amit.batra@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "attrs>=22.2",
+    "fastapi>=0.110",
+    "httpx>=0.23",
+    "pydantic>=2.10",
+    "uvicorn>=0.30",
+]
 
 [project.scripts]
-explore-graphql-with-python = "explore_graphql_with_python:main"
+explore-openapi-with-python = "explore_openapi_with_python:main"
+
+[dependency-groups]
+dev = [
+    "datamodel-code-generator>=0.90",
+    "openapi-python-client>=0.29",
+]
+
+[tool.uv.build-backend]
+module-name = "explore_openapi_with_python"
+module-root = "src"
 
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]

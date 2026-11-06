@@ -1,0 +1,197 @@
+openapi: 3.1.0
+info:
+  title: Book Store
+  version: 1.0.0
+  description: A small REST API for managing books.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: https://{region}.api.example.com
+    description: Production
+    variables:
+      region:
+        default: us
+        enum: [us, eu]
+  - url: https://api.dev.example.com
+    description: Development
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: books
+    description: Book operations
+
+paths:
+  /health:
+    get:
+      summary: Liveness probe
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+
+  /books:
+    get:
+      tags: [books]
+      summary: List books
+      operationId: listBooks
+      parameters:
+        - name: genre
+          in: query
+          schema:
+            type: string
+            enum: [fiction, nonfiction, sci-fi, poetry]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: A paginated list of books
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Book'
+                  total:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    post:
+      tags: [books]
+      summary: Create a book
+      operationId: createBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookInput'
+      responses:
+        '201':
+          description: Book created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /books/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The book's primary key
+    get:
+      tags: [books]
+      summary: Get a book by id
+      operationId: getBook
+      responses:
+        '200':
+          description: The book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/ProblemDetail'
+
+    delete:
+      tags: [books]
+      summary: Delete a book
+      operationId: deleteBook
+      responses:
+        '204':
+          description: Book deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          minLength: 1
+        genre:
+          type: string
+          enum: [fiction, nonfiction, sci-fi, poetry]
+        author:
+          type: string
+      required: [id, title]
+
+    BookInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        genre:
+          type: string
+          enum: [fiction, nonfiction, sci-fi, poetry]
+        author:
+          type: string
+      required: [title]
+
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+      required: [title, detail]
+
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    NotFound:
+      description: Book not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    ProblemDetail:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
