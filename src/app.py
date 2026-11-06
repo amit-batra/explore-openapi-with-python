@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI, status
 
-from explore_openapi_with_python.generated.models.models import Book, BookInput
+from src.generated.models.models import Book, BookInput
 
 app = FastAPI(title="Book Store", version="1.0.0")
 

@@ -18,9 +18,9 @@ scripts/
   generate.sh                      # regenerates both client + server models
   generate-client.sh               # client only (openapi-python-client)
   generate-server.sh               # server models only (datamodel-code-generator)
-src/explore_openapi_with_python/
+src/
   app.py                           # FastAPI server (stubs) importing generated models
-  __main__.py                      # `python -m explore_openapi_with_python` runs the server
+  __main__.py                      # `python -m src` runs the server
   generated/
     client/                        # generated: typed httpx client (do not edit)
     models/models.py               # generated: shared Pydantic models (do not edit)
@@ -60,13 +60,13 @@ uv run bash scripts/generate-server.sh
 The generators are declared in the `dev` dependency group of `pyproject.toml`, so
 `uv sync` makes them available without a global install.
 
-> The generated files under `src/.../generated/` are **committed** so the repo
+> The generated files under `src/generated/` are **committed** so the repo
 > builds standalone. Treat them as output: edit `openapi.yaml`, then regenerate.
 
 ## Run the server
 
 ```bash
-uv run python -m explore_openapi_with_python
+uv run python -m src
 # then:
 curl -s localhost:8000/health
 open  http://localhost:8000/docs   # interactive Swagger UI

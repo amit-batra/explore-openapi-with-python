@@ -8,7 +8,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SPEC="$REPO_ROOT/openapi.yaml"
-OUT="$REPO_ROOT/src/explore_openapi_with_python/generated/models/models.py"
+OUT="$REPO_ROOT/src/generated/models/models.py"
 
 uv run datamodel-codegen \
   --input "$SPEC" \
@@ -16,4 +16,4 @@ uv run datamodel-codegen \
   --output "$OUT" \
   --output-model-type pydantic_v2.BaseModel
 
-echo "Server models generated at src/explore_openapi_with_python/generated/models/models.py"
+echo "Server models generated at src/generated/models/models.py"

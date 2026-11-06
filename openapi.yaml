@@ -1,4 +1,9 @@
+# OpenAPI 3.1 description of the Book Store API.
+# This document is the single source of truth for the API contract and can be
+# used to generate clients, servers, and documentation.
 openapi: 3.1.0
+
+# Human-readable metadata about the API.
 info:
   title: Book Store
   version: 1.0.0
@@ -6,6 +11,9 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
+
+# Base URLs. Clients pick a server from this list. The production URL is
+# templated so the same API can be reached in different regions.
 servers:
   - url: https://{region}.api.example.com
     description: Production
@@ -16,20 +24,26 @@ servers:
   - url: https://api.dev.example.com
     description: Development
 
+# Global security requirement: every operation requires a bearer token
+# unless it explicitly overrides this (see /health, which is public).
 security:
   - BearerAuth: []
 
+# Tags group related operations in generated documentation.
 tags:
   - name: books
     description: Book operations
 
 paths:
+  # Liveness check used by load balancers and orchestrators.
+  # `security: []` opts this operation out of the global BearerAuth requirement.
   /health:
     get:
       summary: Liveness probe
       operationId: healthCheck
       security: []
       responses:
+        # Always returns a fixed status to signal the service is up.
         '200':
           description: OK
           content:
@@ -41,17 +55,21 @@ paths:
                     type: string
                     enum: [ok]
 
+  # Collection endpoint for books.
   /books:
+    # List books, optionally filtered by genre and paginated.
     get:
       tags: [books]
       summary: List books
       operationId: listBooks
       parameters:
+        # Optional filter; omitting it returns books of every genre.
         - name: genre
           in: query
           schema:
             type: string
             enum: [fiction, nonfiction, sci-fi, poetry]
+        # 1-based page number; defaults to the first page when omitted.
         - name: page
           in: query
           schema:
@@ -66,15 +84,18 @@ paths:
               schema:
                 type: object
                 properties:
+                  # The books on the current page.
                   items:
                     type: array
                     items:
                       $ref: '#/components/schemas/Book'
+                  # Total number of books matching the filter (not just this page).
                   total:
                     type: integer
         '400':
           $ref: '#/components/responses/BadRequest'
 
+    # Create a new book. The server assigns the `id`.
     post:
       tags: [books]
       summary: Create a book
@@ -86,6 +107,7 @@ paths:
             schema:
               $ref: '#/components/schemas/BookInput'
       responses:
+        # Returns the created book, including its server-assigned id.
         '201':
           description: Book created
           content:
@@ -95,7 +117,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  # Single-book endpoint; {id} identifies the book.
   /books/{id}:
+    # Path parameter shared by all operations on this path.
     parameters:
       - name: id
         in: path
@@ -103,6 +127,8 @@ paths:
         schema:
           type: integer
         description: The book's primary key
+
+    # Fetch one book by id.
     get:
       tags: [books]
       summary: Get a book by id
@@ -116,9 +142,11 @@ paths:
                 $ref: '#/components/schemas/Book'
         '404':
           $ref: '#/components/responses/NotFound'
+        # Catches any other status (e.g. 500) using the shared problem schema.
         default:
           $ref: '#/components/responses/ProblemDetail'
 
+    # Delete one book by id.
     delete:
       tags: [books]
       summary: Delete a book
@@ -129,16 +157,20 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+# Reusable definitions referenced throughout the document.
 components:
+  # Authentication scheme used by the global `security` requirement.
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
 
   schemas:
+    # A book as returned by the API (includes the read-only server id).
     Book:
       type: object
       properties:
+        # Server-assigned identifier; ignored if sent by clients.
         id:
           type: integer
           readOnly: true
@@ -152,6 +184,8 @@ components:
           type: string
       required: [id, title]
 
+    # Payload accepted when creating a book. `id` is omitted because the
+    # server assigns it.
     BookInput:
       type: object
       properties:
@@ -165,17 +199,22 @@ components:
           type: string
       required: [title]
 
+    # RFC 9457-style problem details used for error responses.
     ProblemDetail:
       type: object
       properties:
+        # A URI identifying the problem type.
         type:
           type: string
+        # A short, human-readable summary of the problem.
         title:
           type: string
+        # A longer, human-readable explanation of this occurrence.
         detail:
           type: string
       required: [title, detail]
 
+  # Reusable response definitions, referenced via $ref from operations.
   responses:
     BadRequest:
       description: Invalid input
