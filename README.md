@@ -14,13 +14,16 @@ machine-checkable and drives code on both sides.
 
 ```
 openapi.yaml                       # the single source of truth (OpenAPI 3.1)
+data/
+  books.json                       # sample store data (5 books), mutated by the API
 scripts/
   generate.sh                      # regenerates both client + server models
   generate-client.sh               # client only (openapi-python-client)
   generate-server.sh               # server models only (datamodel-code-generator)
 src/
-  app.py                           # FastAPI server (stubs) importing generated models
+  app.py                           # FastAPI server (JSON-backed CRUD) importing generated models
   __main__.py                      # `python -m src` runs the server
+  client.py                        # example client: calls every endpoint and prints responses
   generated/
     client/                        # generated: typed httpx client (do not edit)
     models/models.py               # generated: shared Pydantic models (do not edit)
@@ -40,13 +43,16 @@ uv sync            # create .venv and install runtime + dev dependencies
 | Operation   | Method & path        | Notes                                  |
 |-------------|----------------------|----------------------------------------|
 | `healthCheck` | `GET /health`      | public liveness probe                  |
-| `listBooks`   | `GET /books`        | query: `genre` (enum), `page` (int)    |
+| `listBooks`   | `GET /books`        | query: `genre` (enum), `page` (int; 2 per page) |
 | `createBook`  | `POST /books`       | body `BookInput` -> `201` + `Book`     |
 | `getBook`     | `GET /books/{id}`   | -> `200` `Book`, `404`, default        |
 | `deleteBook`  | `DELETE /books/{id}` | -> `204`, `404`                       |
 
 Authentication is declared as a global `Bearer` security scheme
 (`components.securitySchemes.BearerAuth`); `/health` opts out with `security: []`.
+
+Error responses use `ProblemDetail`, whose `type` is an enum: `invalid_request`
+for bad query parameters and `resource_not_found` for missing books.
 
 ## Regenerate the code
 
@@ -72,9 +78,27 @@ curl -s localhost:8000/health
 open  http://localhost:8000/docs   # interactive Swagger UI
 ```
 
-The routes in `app.py` are **stubs** — each raises `NotImplementedError` except
-`/health`. That is the scaffolding OpenAPI gives you: correct paths, params,
-request/response models, and status codes, with bodies left for you to fill in.
+The routes in `app.py` implement full CRUD for books. State is persisted in
+`data/books.json`, which starts with five sample books: `POST` appends a book
+with a server-assigned `id`, `DELETE` removes one, and both write the file back.
+Pagination uses a fixed page size of 2.
+
+## Run the example client
+
+Start the server in one terminal, then in another run:
+
+```bash
+uv run python -m src.client
+```
+
+The client uses the generated typed client to call `/health`, list books, create
+a book, fetch it by id, and delete it, printing each response. Point it at a
+different server or token with environment variables:
+
+```bash
+BOOK_STORE_URL=http://127.0.0.1:9000 BOOK_STORE_TOKEN=my-token \
+  uv run python -m src.client
+```
 
 ## Design notes
 

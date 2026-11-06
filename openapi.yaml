@@ -203,9 +203,11 @@ components:
     ProblemDetail:
       type: object
       properties:
-        # A URI identifying the problem type.
+        # Machine-readable problem category. `invalid_request` covers malformed
+        # query parameters; `resource_not_found` covers missing books.
         type:
           type: string
+          enum: [invalid_request, resource_not_found]
         # A short, human-readable summary of the problem.
         title:
           type: string

@@ -9,6 +9,7 @@ from .health_check_response_200_status import HealthCheckResponse200Status
 from .list_books_genre import ListBooksGenre
 from .list_books_response_200 import ListBooksResponse200
 from .problem_detail import ProblemDetail
+from .problem_detail_type import ProblemDetailType
 
 __all__ = (
     "Book",
@@ -20,4 +21,5 @@ __all__ = (
     "ListBooksGenre",
     "ListBooksResponse200",
     "ProblemDetail",
+    "ProblemDetailType",
 )

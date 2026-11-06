@@ -6,6 +6,7 @@ from typing import Any, Self, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.problem_detail_type import ProblemDetailType
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="ProblemDetail")
@@ -17,12 +18,12 @@ class ProblemDetail:
     Attributes:
         title (str):
         detail (str):
-        type_ (str | Unset):
+        type_ (ProblemDetailType | Unset):
     """
 
     title: str
     detail: str
-    type_: str | Unset = UNSET
+    type_: ProblemDetailType | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -30,7 +31,9 @@ class ProblemDetail:
 
         detail = self.detail
 
-        type_ = self.type_
+        type_: str | Unset = UNSET
+        if not isinstance(self.type_, Unset):
+            type_ = self.type_.value
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -52,7 +55,12 @@ class ProblemDetail:
 
         detail = d.pop("detail")
 
-        type_ = d.pop("type", UNSET)
+        _type_ = d.pop("type", UNSET)
+        type_: ProblemDetailType | Unset
+        if isinstance(_type_, Unset):
+            type_ = UNSET
+        else:
+            type_ = ProblemDetailType(_type_)
 
         problem_detail = cls(
             title=title,
